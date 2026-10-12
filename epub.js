@@ -1218,8 +1218,14 @@ class Loader {
     }
 }
 
+// `getElementById` only resolves ids that the document's ID type declares
+// (HTML documents, or XML with a DTD). A section loaded as raw XML — an iframe
+// whose `src` is a blob URL, where the content transform hook did not run —
+// has no such type, so fall back to attribute selectors that work in both
+// HTML and XML.
 const getHTMLFragment = (doc, id) => doc.getElementById(id)
     ?? doc.querySelector(`[name="${CSS.escape(id)}"]`)
+    ?? doc.querySelector(`[id="${CSS.escape(id)}"]`)
 
 const getPageSpread = properties => {
     for (const p of properties) {

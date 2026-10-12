@@ -48,6 +48,15 @@ const extractFootnote = (doc, anchor) => {
         el = parent
     }
     if (el === doc.body) {
+        // The anchor target is often the note container itself — e.g. a <span>
+        // or <div> that wraps the note's paragraphs and sits directly in the
+        // section body (a bookmark link straight to the note). That element IS
+        // the note, so return it instead of climbing to the section root and
+        // failing to find a block-level sibling to use as the note body.
+        if (target?.nodeType === 1 && target.children.length > 0
+            && target.querySelector('div, p, li, dd, dt, blockquote, section, aside, table')) {
+            return target
+        }
         const sibling = target.nextElementSibling
         if (sibling && !sibling.matches(isInline)) return sibling
         throw new Error('Failed to extract footnote')
@@ -163,7 +172,7 @@ export class FootnoteHandler extends EventTarget {
                                 reject(new Error('Failed to locate footnote content'))
                                 return
                             }
-                        } else if (check) {
+                        } else if (check && !el.children.length) {
                             reject(new Error('Failed to locate footnote content'))
                             return
                         } else {
